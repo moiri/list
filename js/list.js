@@ -2,10 +2,7 @@ function List(id, parentId) {
     var me = this;
     me.id = id + '-list';
     me.contId = me.id + '-cont';
-    me.markerId = me.id + '-marker';
     me.parentId = parentId;
-    me.listContHeight;
-    me.$curr = [];
 
     this.add = function (entries) {
         var entry = null;
@@ -16,8 +13,15 @@ function List(id, parentId) {
                     + ' class="list-entry">' + entry.name + '</div>');
         }
         $('#' + me.contId + '>:last-child').css('border-bottom', 'none');
-        me.$curr = $('#' + me.contId + '>:first-child');
-        me.$curr.addClass('active');
+        me.first();
+        if ($('#' + me.id).height() > $('#' + me.contId).outerHeight()) {
+            $('#' + me.id).css('bottom','auto');
+        }
+        else {
+            $('#' + me.id).css('bottom','');
+        }
+        me.registerTouchEvents();
+        me.registerMouseEvents();
     };
 
     this.empty = function () {
@@ -25,69 +29,66 @@ function List(id, parentId) {
     };
 
     this.first = function () {
-        me.$curr.removeClass('active');
-        me.$curr = $('#' + me.contId + '>:first-child');
-        me.$curr.addClass('active');
-        me.positionList();
+        me.unselect();
+        me.select($('#' + me.contId + '>:first-child'), true);
     };
 
-    this.jump = function (id) {
-        me.$curr.removeClass('active');
-        $newEntry = $('#' + id);
-        if ($newEntry.length > 0) {
-            me.$curr = $newEntry;
+    this.jump = function (id, animate) {
+        var $elem = $('#' + id);
+        if (animate === undefined) animate = false;
+        me.unselect();
+        if ($elem.length > 0) {
+            me.select($elem, animate);
         }
-        else console.log('unknown list entry id: ' + id);
-        me.$curr.addClass('active');
-        me.positionList();
+        else {
+            console.log('unknown list entry id: ' + id);
+        }
     };
 
     this.last = function () {
-        me.$curr.removeClass('active');
-        me.$curr = $('#' + me.contId + '>:last-child');
-        me.$curr.addClass('active');
-        me.positionList();
+        me.unselect();
+        me.select($('#' + me.contId + '>:last-child'), true);
     };
 
-    this.move = function (elemStr, step, wrap) {
-        var $newEntry = me.$curr,
+    this.move = function ($elem, elemStr, step, wrap) {
+        var $newElem = $elem,
             i = 0,
             endElem = 'last',
             startElem = 'first';
         if (step === undefined) step = 1;
         else if (step === 'page') {
             step = Math.floor(
-                    $('#' + me.id).height() / me.$curr.outerHeight()) - 1;
+                    $('#' + me.id).height() / $elem.outerHeight()) - 1;
         }
         if (wrap === undefined) wrap = true;
         me.listContHeight = $('#' + me.contId).outerHeight();
-        me.$curr.removeClass('active');
         if (elemStr === 'prev') {
             endElem = 'first';
             startElem = 'last';
         }
 
         for (i; i<step; i++) {
-            if (elemStr === 'prev') $newEntry = $newEntry.prev();
-            else $newEntry = $newEntry.next();
+            if (elemStr === 'prev') $newElem = $newElem.prev();
+            else $newElem = $newElem.next();
         }
-        if ($newEntry.length > 0) {
-            me.$curr = $newEntry;
+        if ($newElem.length > 0) {
+            return $newElem;
         }
-        else if (me.$curr.is('#' + me.contId + '>:' + endElem + '-child')) {
+        else if ($elem.is('#' + me.contId + '>:' + endElem + '-child')) {
             if (wrap) {
-                me.$curr = $('#' + me.contId + '>:' + startElem + '-child');
+                return $('#' + me.contId + '>:' + startElem + '-child');
+            }
+            else {
+                return $('#' + me.contId + '>:' + endElem + '-child');
             }
         }
         else {
-            me.$curr = $('#' + me.contId + '>:' + endElem + '-child');
+            return $('#' + me.contId + '>:' + endElem + '-child');
         }
-        me.$curr.addClass('active');
-        me.positionList();
     };
 
     this.next = function (step, wrap) {
-        me.move('next', step, wrap);
+        me.select(me.move(me.unselect(), 'next', step, wrap));
     };
 
     this.pageDown = function () {
@@ -99,29 +100,42 @@ function List(id, parentId) {
     };
 
     this.prev = function (step, wrap) {
-        me.move('prev', step, wrap);
+        me.select(me.move(me.unselect(), 'prev', step, wrap));
     };
 
-    me.positionList = function () {
+    me.updatePositionSelectEntry = function ($elem, animate) {
         var listHeight = $('#' + me.id).height(),
             listContHeight = $('#' + me.contId).height(),
-            currentHeight = me.$curr.outerHeight(),
-            currentTop = me.$curr.position().top,
-            currentBottom = listContHeight - me.$curr.position().top,
+            currentHeight = $elem.outerHeight(),
+            currentTop = $elem.position().top,
+            currentBottom = listContHeight - currentTop,
             midListPosition
-                = ($('#' + me.id).outerHeight() - currentHeight) / 2;
+                = ($('#' + me.id).outerHeight() - currentHeight) / 2,
+            newPosition = 0;
         if (midListPosition > currentTop) {
             // moving active element above the middle
-            $('#' + me.contId).css('top', 0);
+            newPosition = 0;
         }
         else if (midListPosition > (currentBottom - currentHeight)) {
             // moving active element below the middle
-            $('#' + me.contId).css('top', listHeight - listContHeight);
+            newPosition = listHeight - listContHeight;
         }
         else {
             // active element is static, move list
-            $('#' + me.contId).css('top', midListPosition - currentTop);
+            newPosition = midListPosition - currentTop;
         }
+        if (animate)
+            $('#' + me.contId).animate({'top': newPosition});
+        else
+            $('#' + me.contId).css('top', newPosition);
+    };
+
+    this.registerMouseEvents = function () {
+        $('[id|="' + me.id+ '-entry"]').unbind('click');
+        $('[id|="' + me.id+ '-entry"]').click(function () {
+            me.unselect();
+            me.select($(this), true);
+        });
     };
 
     this.registerKeyEvents = function () {
@@ -136,13 +150,21 @@ function List(id, parentId) {
     };
 
     this.registerTouchEvents = function () {
-        $('.list-entry').bind("touchstart", function () {
-            $('.list-entry').removeClass('active');
+        $('[id|="' + me.id+ '-entry"]').unbind('touchstart');
+        $('[id|="' + me.id+ '-entry"]').bind('touchstart', function () {
+            me.unselect();
             $(this).addClass('active');
         });
-        $('.list-entry').bind("touchmove", function () {
-            $(this).removeClass('active');
+        $('[id|="' + me.id+ '-entry"]').unbind('touchmove');
+        $('[id|="' + me.id+ '-entry"]').bind('touchmove', function () {
+            me.unselect();
         });
+    };
+
+    this.select = function ($elem, animate) {
+        if (animate === undefined) animate = false;
+        $elem.addClass('active');
+        me.updatePositionSelectEntry($elem, animate);
     };
 
     this.setup = function () {
@@ -151,7 +173,12 @@ function List(id, parentId) {
         $('#' + me.id)
             .append('<div id="' + me.contId + '" class="list-cont"></div>');
         me.registerKeyEvents();
-        me.registerTouchEvents();
+    };
+
+    this.unselect = function () {
+        var $elem = $('.list-entry.active');
+        $elem.removeClass('active');
+        return $elem;
     };
 
     this.setup();

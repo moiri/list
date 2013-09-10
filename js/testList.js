@@ -2,7 +2,7 @@ $(document).ready(function () {
     var list = new List('media', 'content'),
         entries = [],
         i = 0,
-        maxEntryCnt = 300;
+        maxEntryCnt = 1000;
 
     for (i; i < maxEntryCnt; i++) {
         var entry = [];
@@ -32,7 +32,7 @@ $(document).ready(function () {
         list.prev(5, false);
     });
     $('#jump').click(function () {
-        list.jump('media-list-entry-123');
+        list.jump('media-list-entry-123', true);
     });
     $('#empty').click(function () {
         list.empty();
