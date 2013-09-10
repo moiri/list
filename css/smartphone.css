@@ -1,0 +1,32 @@
+.list {
+    max-width:100%;
+    margin:0;
+    overflow:auto;
+    bottom:auto;
+    position:absolute;
+    border:none;
+    padding:0;
+}
+
+.config {
+    display:none;
+}
+
+.list-entry {
+    padding:1em;
+    font-size:1.2em;
+    background-color:black;
+    color:white;
+    border-bottom:1px solid DimGray;
+}
+
+.list-marker {
+    display:none;
+}
+
+.active {
+    background-color:DarkOrange;
+    border-bottom:1px solid DarkOrange;
+    color:black;
+    margin:0 !important;
+}

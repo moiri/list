@@ -1,0 +1,46 @@
+.list {
+    margin:10px;
+    border:1px solid gray;
+    position:fixed;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    display:block;
+    max-width:20%;
+    overflow:hidden;
+}
+
+.list-entry {
+    padding:2px 8px;
+    border-bottom:1px solid gray;
+}
+
+.list-cont {
+    position:relative;
+}
+
+.list-marker {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    border:5px solid red;
+    padding:1px;
+    margin-top:12px;
+}
+
+.active {
+    background-color:red;
+    color:black;
+}
+
+.config {
+    position:fixed;
+    top:10px;
+    right:10px;
+}
+
+.config-entry {
+    cursor:pointer;
+}
