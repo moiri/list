@@ -29,8 +29,11 @@ function List(id, parentId) {
     };
 
     this.first = function () {
-        me.unselect();
-        me.select($('#' + me.contId + '>:first-child'), true);
+        var animate = false;
+        if (!me.unselect().is('#' + me.contId + '>:first-child')) {
+            animate = true;
+        }
+        me.select($('#' + me.contId + '>:first-child'), animate);
     };
 
     this.jump = function (id, animate) {
@@ -46,8 +49,11 @@ function List(id, parentId) {
     };
 
     this.last = function () {
-        me.unselect();
-        me.select($('#' + me.contId + '>:last-child'), true);
+        var animate = false;
+        if (!me.unselect().is('#' + me.contId + '>:last-child')) {
+            animate = true;
+        }
+        me.select($('#' + me.contId + '>:last-child'), animate);
     };
 
     this.move = function ($elem, elemStr, step, wrap) {
